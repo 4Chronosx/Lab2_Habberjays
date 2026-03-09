@@ -2,7 +2,7 @@
 
 import express, {Request, Response} from 'express'
 import cors from 'cors'
-
+import taskRoutes from "./routes/task.routes"
 const app = express()
 const PORT = 8000
 
@@ -24,6 +24,8 @@ app.use(cors({
 }));
 
 app.use(express.json())
+
+app.use("/task", taskRoutes);
 
 app.get('/', (req: Request, res: Response) => {
     res.json({ message: 'Hello World' })
