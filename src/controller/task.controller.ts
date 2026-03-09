@@ -17,17 +17,3 @@ export const addTask = async (req: AuthRequest, res: Response) => {
         res.status(500).json({error: err.message})
     }
 }
-
-/*
-
-
-export const getSearchHistory = async (req: AuthRequest, res: Response) => {
-    try {
-        const result = await DBService.loadAll(req.userId!); 
-        res.json(result);
-    } catch (err: any) {
-        res.status(500).json({ error: err.message });
-    }
-}
-
-*/
