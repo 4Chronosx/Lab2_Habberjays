@@ -5,8 +5,7 @@ CREATE TABLE users (
     fullname TEXT,
     email TEXT UNIQUE NOT NULL,
     picture_url TEXT,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 
