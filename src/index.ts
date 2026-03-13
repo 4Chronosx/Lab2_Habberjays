@@ -3,14 +3,18 @@
 import express, {Request, Response} from 'express'
 import cors from 'cors'
 import taskRoutes from "./routes/task.routes"
+import authRoutes from "./routes/auth.routes"
+import cookieParser from "cookie-parser";
 const app = express()
 const PORT = 8000
 
 
 const allowedOrigins = [
   'http://localhost:8000',
+  'http://localhost:5500'
 ];
 
+app.use(cookieParser());
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -26,11 +30,12 @@ app.use(cors({
 app.use(express.json())
 
 app.use("/task", taskRoutes);
+app.use("/auth", authRoutes);
 
 app.get('/', (req: Request, res: Response) => {
     res.json({ message: 'Hello World' })
-})
+});
 
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`)
-})
+    console.log(`Server running on http://localhost:${PORT}`);
+});
