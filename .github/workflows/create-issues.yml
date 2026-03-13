@@ -1,0 +1,84 @@
+name: Create Issues from README
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - copilot/create-github-issues
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const issues = [
+              {
+                title: "Offline-first behavior",
+                body: `## Requirement 1 - Offline-first behavior (5pts)\n\n### Tasks\n- [ ] a. Continue working offline\n- [ ] b. When there is an internet connection, push unsynced local changes to online backend. Decide on what is the best way to manage conflict when syncing.`,
+                labels: []
+              },
+              {
+                title: "Authentication",
+                body: `## Requirement 2 - Authentication (5pts)\n\n### Tasks\n- [ ] a. Users must be able to register, login, and logout\n- [ ] b. Use JWT\n- [ ] c. Implement protected API routes\n- [ ] d. Only store hashed password\n- [ ] e. Alternative: Implement Login with Google`,
+                labels: []
+              },
+              {
+                title: "REST API Endpoints",
+                body: `## Requirement 3 - REST API Endpoints (10pts)\n\n### Tasks\n- [ ] a. POST /auth/register\n- [ ] b. POST /auth/login\n- [ ] c. GET /tasks\n- [ ] d. POST /tasks (Use this endpoint for creating, updating, and deleting) - soft deletion only\n- [ ] e. Create Postman documentation`,
+                labels: []
+              },
+              {
+                title: "API Testing (Bonus)",
+                body: `## Requirement 4 - API Testing (Bonus) (10pts)\n\n### Tasks\n- [ ] a. Create api test using postman or other methods`,
+                labels: ["enhancement"]
+              },
+              {
+                title: "Realtime Updates (Web Sockets)",
+                body: `## Requirement 5 - Realtime Updates (Web Sockets) (10pts)\n\n### Tasks\n- [ ] a. When a task is created/updated/moved/deleted, all connected clients instantly receive updates`,
+                labels: []
+              },
+              {
+                title: "Database (PostgreSQL)",
+                body: `## Requirement 6 - Database (PostgreSQL) (10pts)\n\n### Tasks\n- [ ] a. Have at least 2 tables: users and tasks.\n- [ ] b. You have flexibility on how you want to design your database.`,
+                labels: []
+              },
+              {
+                title: "Cron Job",
+                body: `## Requirement 7 - Cron Job (10pts)\n\n### Tasks\nCreate at least one scheduled job:\n- [ ] i. Clean soft-deleted tasks\n- [ ] ii. Archive tasks older than X days\n- [ ] iii. Generate daily summary logs (could be sent via email)\n- [ ] iv. Or you can create another feature that uses background/scheduled job`,
+                labels: []
+              },
+              {
+                title: "Rate Limiting (Bonus)",
+                body: `## Requirement 8 - Rate Limiting (Bonus) (10pts)\n\n### Tasks\nProtect API endpoints from abuse:\n- [ ] i. Limit requests per IP/email/etc`,
+                labels: ["enhancement"]
+              }
+            ];
+
+            // Get existing issues to avoid duplicates
+            const existingIssues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 100
+            });
+            const existingTitles = existingIssues.map(i => i.title.toLowerCase());
+
+            for (const issue of issues) {
+              if (existingTitles.includes(issue.title.toLowerCase())) {
+                console.log(`Issue already exists: ${issue.title}`);
+                continue;
+              }
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issue.title,
+                body: issue.body,
+                labels: issue.labels
+              });
+              console.log(`Created issue #${created.data.number}: ${issue.title}`);
+            }
