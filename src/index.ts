@@ -8,6 +8,7 @@ import cookieParser from "cookie-parser";
 const app = express()
 const PORT = 8000
 
+const isProduction = process.env.NODE_ENV === "production";
 
 const allowedOrigins = [
   'http://localhost:8000',

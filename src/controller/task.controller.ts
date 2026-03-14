@@ -4,7 +4,7 @@ import { AuthRequest } from '../middleware/middleware';
 
 export const addTask = async (req: AuthRequest, res: Response) => {
     const task = req.body;
-    const userId = req.user?.sub; 
+    const userId = req.user?.userId; 
 
     if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });

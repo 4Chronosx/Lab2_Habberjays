@@ -1,32 +1,33 @@
 import { Request, Response, NextFunction } from "express";
-import { google } from "../lib/google";
+import jwt from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
     user?: any;
 }
 
-export const authenticated = async(req: AuthRequest, res: Response, next: NextFunction) => {
-    console.log("cookies:", req.cookies);        // see what cookies arrived
-    console.log("headers:", req.headers.origin); // see the request origin
-    
-    const token = req.cookies.id_token;
-    console.log("token:", token);                // see if token was found
+export const authenticated = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const accessToken = req.cookies.access_token;
 
-    if (!token) {
-        return res.status(401).json({ message: "Unauthorized: No token provided" });
+    if (!accessToken) {
+        return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
-        const ticket = await google.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID
-        });
-
-        const payload = ticket.getPayload();
+        const payload = jwt.verify(accessToken, process.env.JWT_SECRET!) as any;
         req.user = payload;
         next();
     } catch (error) {
-        console.error("Token verification failed:", error);
-        res.status(401).json({ message: "Unauthorized: Invalid token" });
+
+        return res.status(401).json({ message: "Access token expired" });
     }
+}
+
+export const validateCsrf = (req: Request, res: Response, next: NextFunction) => {
+    const cookieToken = req.cookies.csrf_token;
+    const headerToken = req.headers["x-csrf-token"];
+
+    if (!cookieToken || cookieToken !== headerToken) {
+        return res.status(403).json({ error: "Invalid CSRF token" });
+    }
+    next();
 }
