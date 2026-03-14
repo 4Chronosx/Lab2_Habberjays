@@ -62,13 +62,25 @@ async function initiateGoogleOAuth() {
 
 // ─── Login page ───────────────────────────────────────────────────────────────
 
-function initLoginPage() {
+async function initLoginPage() {
+    // if already logged in, redirect to home
+    try {
+        const res = await fetch(`${API_URL}/auth/google/verify`, {
+            credentials: "include"
+        });
+        if (res.ok) {
+            window.location.href = "home.html";
+            return;
+        }
+    } catch (err) {
+        // not logged in, stay on login page
+    }
+
     const loginButton = document.getElementById("google-signin-button");
     if (loginButton) {
         loginButton.addEventListener("click", initiateGoogleOAuth);
     }
 
-    // handle error redirects from backend
     const params = new URLSearchParams(window.location.search);
     const error = params.get("error");
     if (error) {
