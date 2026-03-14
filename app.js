@@ -1,9 +1,55 @@
+const API_URL = "http://localhost:8000";
+
+// ─── Core fetch wrapper ───────────────────────────────────────────────────────
+
+async function fetchWithAuth(url, options = {}) {
+    console.log("fetching:", url);
+    let res = await fetch(url, { ...options, credentials: "include" });
+    console.log("response:", res.status, url);
+
+    if (res.status === 401) {
+        console.log("401 received, attempting refresh...");
+        const refreshRes = await fetch(`${API_URL}/auth/google/refresh`, {
+            method: "POST",
+            credentials: "include"
+        });
+        console.log("refresh response:", refreshRes.status);
+
+        if (!refreshRes.ok) {
+            window.location.href = "index.html";
+            return null;
+        }
+
+        res = await fetch(url, { ...options, credentials: "include" });
+        console.log("retry response:", res.status, url);
+    }
+
+    return res;
+}
+// ─── CSRF ─────────────────────────────────────────────────────────────────────
+
+let csrfToken = null;
+
+async function fetchCsrfToken() {
+    try {
+        const res = await fetch(`${API_URL}/auth/csrf`, {
+            credentials: "include"
+        });
+        const data = await res.json();
+        csrfToken = data.csrfToken;
+    } catch (err) {
+        console.error("Failed to fetch CSRF token:", err);
+    }
+}
+
+// ─── OAuth ────────────────────────────────────────────────────────────────────
+
 async function initiateGoogleOAuth() {
     try {
-        const res = await fetch("http://localhost:8000/auth/google/url");
-        const { url, state } = await res.json();
-
-        sessionStorage.setItem("oauth_state", state);
+        const res = await fetch(`${API_URL}/auth/google/url`, {
+            credentials: "include"
+        });
+        const { url } = await res.json();
         window.location.href = url;
     } catch (err) {
         console.error("Failed to initiate OAuth flow:", err);
@@ -14,21 +60,36 @@ async function initiateGoogleOAuth() {
     }
 }
 
+// ─── Login page ───────────────────────────────────────────────────────────────
+
 function initLoginPage() {
     const loginButton = document.getElementById("google-signin-button");
     if (loginButton) {
         loginButton.addEventListener("click", initiateGoogleOAuth);
     }
+
+    // handle error redirects from backend
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    if (error) {
+        const errorEl = document.getElementById("login-error");
+        if (errorEl) {
+            errorEl.textContent = `Authentication error: ${error.replace(/_/g, " ")}`;
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 }
 
-async function initHomePage() {
-    // verify session with backend
-    try {
-        const res = await fetch("http://localhost:8000/auth/google/verify", {
-            credentials: "include" // sends cookie automatically
-        });
+// ─── Home page ────────────────────────────────────────────────────────────────
 
-        if (!res.ok) {
+async function initHomePage() {
+    await fetchCsrfToken();
+
+    // verify session
+    try {
+        const res = await fetchWithAuth(`${API_URL}/auth/google/verify`);
+
+        if (!res || !res.ok) {
             window.location.href = "index.html";
             return;
         }
@@ -45,17 +106,20 @@ async function initHomePage() {
         return;
     }
 
+    // logout
     const logoutButton = document.getElementById("logout");
     if (logoutButton) {
         logoutButton.addEventListener("click", async () => {
-            await fetch("http://localhost:8000/auth/google/logout", {
+            await fetchWithAuth(`${API_URL}/auth/google/logout`, {
                 method: "POST",
-                credentials: "include"
+                headers: { "x-csrf-token": csrfToken }
             });
             window.location.href = "index.html";
         });
     }
 }
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("google-signin-button")) {
