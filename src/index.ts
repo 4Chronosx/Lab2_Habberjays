@@ -5,6 +5,8 @@ import taskRoutes from "./routes/task.routes";
 import authRoutes from "./routes/auth.routes";
 import cookieParser from "cookie-parser";
 import { initWebSocket } from "./websocket";
+import path from "path";
+
 const app = express();
 const PORT = 8000;
 
@@ -28,6 +30,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "..", "public")));
 
 app.use("/task", taskRoutes);
 app.use("/auth", authRoutes);
