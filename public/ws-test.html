@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Test Client</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        margin: 2rem;
+        line-height: 1.6;
+        background: #fafafa;
+        color: #333;
+      }
+
+      h1 {
+        margin-bottom: 0.5rem;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+
+      .status.connected {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.disconnected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status.error {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .panel {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .panel h2 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+        color: #555;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+      }
+
+      select,
+      input,
+      textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        margin-bottom: 0.75rem;
+      }
+
+      textarea {
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        resize: vertical;
+        min-height: 60px;
+      }
+
+      button {
+        padding: 0.5rem 1.25rem;
+        font-size: 0.95rem;
+        border: 1px solid #333;
+        border-radius: 4px;
+        background: #f9f9f9;
+        cursor: pointer;
+        margin-right: 0.5rem;
+      }
+
+      button:hover {
+        background: #eaeaea;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-primary {
+        background: #0d6efd;
+        color: #fff;
+        border-color: #0d6efd;
+      }
+
+      .btn-primary:hover {
+        background: #0b5ed7;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: #fff;
+        border-color: #6c757d;
+      }
+
+      .btn-secondary:hover {
+        background: #5c636a;
+      }
+
+      #log {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.85rem;
+        padding: 1rem;
+        border-radius: 4px;
+        height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+
+      .log-entry {
+        margin-bottom: 0.25rem;
+      }
+
+      .log-time {
+        color: #6a9955;
+      }
+
+      .log-info {
+        color: #569cd6;
+      }
+
+      .log-error {
+        color: #f44747;
+      }
+
+      .log-msg {
+        color: #dcdcaa;
+      }
+
+      .actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WebSocket Test Client</h1>
+    <div id="status" class="status disconnected">Disconnected</div>
+
+    <div class="panel">
+      <h2>Send Message</h2>
+      <label for="type">Action Type</label>
+      <select id="type">
+        <option value="TASK_CREATED">TASK_CREATED</option>
+        <option value="TASK_UPDATED">TASK_UPDATED</option>
+        <option value="TASK_MOVED">TASK_MOVED</option>
+        <option value="TASK_DELETED">TASK_DELETED</option>
+      </select>
+
+      <label for="payload">Payload (JSON)</label>
+      <textarea id="payload">{"title": "New Task", "id": 1}</textarea>
+
+      <div class="actions">
+        <button id="send" class="btn-primary" disabled>Send</button>
+        <button id="open-second" class="btn-secondary">
+          Open Second Client
+        </button>
+        <button id="clear-log">Clear Log</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Message Log</h2>
+      <div id="log"></div>
+    </div>
+
+    <script>
+      const logEl = document.getElementById("log");
+      const statusEl = document.getElementById("status");
+      const sendBtn = document.getElementById("send");
+      const typeSelect = document.getElementById("type");
+      const payloadInput = document.getElementById("payload");
+      const openSecondBtn = document.getElementById("open-second");
+      const clearLogBtn = document.getElementById("clear-log");
+
+      let ws = null;
+
+      function getTimestamp() {
+        return new Date().toLocaleTimeString("en-US", { hour12: false });
+      }
+
+      function appendLog(text, className) {
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+
+        const time = document.createElement("span");
+        time.className = "log-time";
+        time.textContent = "[" + getTimestamp() + "] ";
+
+        const msg = document.createElement("span");
+        msg.className = className || "log-info";
+        msg.textContent = text;
+
+        entry.appendChild(time);
+        entry.appendChild(msg);
+        logEl.appendChild(entry);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function setStatus(text, state) {
+        statusEl.textContent = text;
+        statusEl.className = "status " + state;
+      }
+
+      function connect() {
+        // Server is running on localhost:8000, so connect the WebSocket directly there.
+        const url = "ws://localhost:8000";
+
+        appendLog("Connecting to " + url + "...", "log-info");
+        ws = new WebSocket(url);
+
+        ws.addEventListener("open", function () {
+          setStatus("Connected", "connected");
+          sendBtn.disabled = false;
+          appendLog("Connected to server", "log-info");
+          console.log("[WS] Connected to server");
+        });
+
+        ws.addEventListener("message", function (event) {
+          let display;
+          try {
+            const parsed = JSON.parse(event.data);
+            display = JSON.stringify(parsed, null, 2);
+          } catch {
+            display = event.data;
+          }
+          appendLog("Received: " + display, "log-msg");
+          console.log("[WS] Message received:", event.data);
+        });
+
+        ws.addEventListener("close", function () {
+          setStatus("Disconnected", "disconnected");
+          sendBtn.disabled = true;
+          appendLog("Connection closed", "log-error");
+          console.log("[WS] Connection closed");
+        });
+
+        ws.addEventListener("error", function () {
+          setStatus("Error", "error");
+          sendBtn.disabled = true;
+          appendLog("Connection error", "log-error");
+          console.log("[WS] Connection error");
+        });
+      }
+
+      sendBtn.addEventListener("click", function () {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+        let payload;
+        try {
+          payload = JSON.parse(payloadInput.value);
+        } catch {
+          appendLog("Error: Payload is not valid JSON", "log-error");
+          return;
+        }
+
+        const message = {
+          type: typeSelect.value,
+          payload: payload,
+          timestamp: new Date().toISOString(),
+        };
+
+        const serialized = JSON.stringify(message);
+        ws.send(serialized);
+        appendLog("Sent: " + JSON.stringify(message, null, 2), "log-info");
+      });
+
+      openSecondBtn.addEventListener("click", function () {
+        window.open(location.href, "_blank", "width=800,height=700");
+      });
+
+      clearLogBtn.addEventListener("click", function () {
+        logEl.innerHTML = "";
+      });
+
+      connect();
+    </script>
+  </body>
+</html>

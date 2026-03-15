@@ -3,7 +3,9 @@
 ## Prerequisites
 
 ### 1. Environment Variables
+
 Create a `.env` file in the backend root:
+
 ```env
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
@@ -14,17 +16,20 @@ NODE_ENV=development
 ```
 
 ### 2. VS Code Live Server — Change Host to Localhost
+
 By default Live Server uses `127.0.0.1` which causes cookie issues.
 You must change it to `localhost`:
 
 1. Open VS Code
 2. Press `Ctrl + Shift + P` → type **Open User Settings (JSON)**
 3. Add the following:
+
 ```json
-   {
-       "liveServer.settings.host": "localhost"
-   }
+{
+  "liveServer.settings.host": "localhost"
+}
 ```
+
 4. Save the file and restart Live Server
 
 ---
@@ -32,6 +37,7 @@ You must change it to `localhost`:
 ## Running the App
 
 ### Backend
+
 ```bash
 # Install dependencies
 npm install
@@ -43,6 +49,7 @@ npm run dev
 ```
 
 ### Frontend
+
 1. Open the `frontend` folder in VS Code
 2. Right click `index.html` → **Open with Live Server**
 3. Frontend will be available at `http://localhost:5500/index.html`
@@ -52,9 +59,11 @@ npm run dev
 ## Testing Protected Routes (REST Client)
 
 ### Setup
+
 Install the [REST Client extension](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) in VS Code.
 
 ### How to get your access token
+
 1. Log in through the browser at `http://localhost:5500/index.html`
 2. Open **Chrome DevTools → F12 → Application → Cookies → http://localhost:8000**
 3. Find `access_token` and copy its value
@@ -65,6 +74,7 @@ Install the [REST Client extension](https://marketplace.visualstudio.com/items?i
 > ⚠️ Do **NOT** use the Google `id_token`. Only the `access_token` issued by this server works.
 
 ### Example Request
+
 ```http
 POST http://localhost:8000/task/add
 Content-Type: application/json
@@ -80,6 +90,7 @@ Cookie: access_token=<paste_access_token_here>
 ---
 
 ## Auth Flow Overview
+
 ```
 User clicks login
         ↓
