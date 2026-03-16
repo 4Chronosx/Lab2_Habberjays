@@ -4,6 +4,7 @@ import { parse as parseUrl } from "url";
 import { IncomingMessage } from "http";
 import jwt from "jsonwebtoken";
 import {
+  AuthenticatedWebSocket,
   addClient,
   removeClient,
   isValidMessage,
@@ -30,7 +31,7 @@ export function initWebSocket(server: HttpServer): WebSocketServer {
         name: string;
       };
 
-      (ws as any).user = payload;
+      (ws as AuthenticatedWebSocket).user = payload;
       console.log(`WebSocket authenticated: ${payload.email}`);
     } catch (error) {
       ws.close(4001, "Unauthorized: Invalid or expired token");
@@ -45,7 +46,7 @@ export function initWebSocket(server: HttpServer): WebSocketServer {
       }),
     );
 
-    addClient(ws);
+    addClient(ws as AuthenticatedWebSocket);
 
     ws.on("message", (data) => {
       console.log("WebSocket message received:", data.toString());
@@ -77,12 +78,12 @@ export function initWebSocket(server: HttpServer): WebSocketServer {
 
     ws.on("close", () => {
       console.log("WebSocket client disconnected");
-      removeClient(ws);
+      removeClient(ws as AuthenticatedWebSocket);
     });
 
     ws.on("error", (error) => {
       console.error("WebSocket error:", error);
-      removeClient(ws);
+      removeClient(ws as AuthenticatedWebSocket);
     });
   });
 

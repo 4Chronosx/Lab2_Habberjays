@@ -1,5 +1,15 @@
 import { WebSocket } from "ws";
 
+// ─── Authenticated WebSocket ──────────────────────────────────────────────────
+
+export interface AuthenticatedWebSocket extends WebSocket {
+  user: {
+    userId: string;
+    email: string;
+    name: string;
+  };
+}
+
 // ─── Message Types ────────────────────────────────────────────────────────────
 
 export const MessageType = {
@@ -21,13 +31,13 @@ export interface WebSocketMessage {
 
 // ─── Client Tracking ──────────────────────────────────────────────────────────
 
-const clients = new Set<WebSocket>();
+const clients = new Set<AuthenticatedWebSocket>();
 
-export function addClient(ws: WebSocket): void {
+export function addClient(ws: AuthenticatedWebSocket): void {
   clients.add(ws);
 }
 
-export function removeClient(ws: WebSocket): void {
+export function removeClient(ws: AuthenticatedWebSocket): void {
   clients.delete(ws);
 }
 
