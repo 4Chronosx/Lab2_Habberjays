@@ -242,8 +242,21 @@
       }
 
       function connect() {
+        // Extract token from URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+
+        if (!token) {
+          appendLog(
+            "Error: No token provided in URL query parameter (?token=...)",
+            "log-error",
+          );
+          setStatus("Error: Missing token", "error");
+          return;
+        }
+
         // Server is running on localhost:8000, so connect the WebSocket directly there.
-        const url = "ws://localhost:8000";
+        const url = "ws://localhost:8000/?token=" + encodeURIComponent(token);
 
         appendLog("Connecting to " + url + "...", "log-info");
         ws = new WebSocket(url);

@@ -1,9 +1,7 @@
 import { TaskService } from "../services/task.service";
 import { Response } from "express";
 import { AuthRequest } from "../middleware/middleware";
-
-// ─── WebSocket Integration (uncomment when ready) ────────────────────────────
-// import { broadcast } from "../services/websocket.service";
+import { broadcast, MessageType } from "../services/websocket.service";
 
 export const addTask = async (req: AuthRequest, res: Response) => {
   const task = req.body;
@@ -17,11 +15,11 @@ export const addTask = async (req: AuthRequest, res: Response) => {
     const result = await TaskService.add(task, userId);
 
     // ─── Broadcast to all connected WebSocket clients ────────────
-    // broadcast({
-    //     type: "TASK_CREATED",
-    //     payload: result,
-    //     timestamp: new Date().toISOString(),
-    // });
+    broadcast({
+      type: MessageType.TASK_CREATED,
+      payload: result,
+      timestamp: new Date().toISOString(),
+    });
 
     res.json(result);
   } catch (err: any) {
