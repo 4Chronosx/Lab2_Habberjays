@@ -189,3 +189,8 @@ export const refresh = async (req: Request, res: Response) => {
         res.status(401).json({ message: "Invalid refresh token" });
     }
 }
+
+export const getToken = async (req: AuthRequest, res: Response) => {
+    const accessToken = req.cookies.access_token;
+    res.json({ access_token: accessToken });
+};
