@@ -1,5 +1,8 @@
 import { Server as HttpServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import { parse as parseUrl } from "url";
+import { IncomingMessage } from "http";
+import jwt from "jsonwebtoken";
 import {
   addClient,
   removeClient,
@@ -10,9 +13,30 @@ import {
 export function initWebSocket(server: HttpServer): WebSocketServer {
   const wss = new WebSocketServer({ server });
 
-  wss.on("connection", (ws: WebSocket) => {
-    console.log("WebSocket client connected");
-    addClient(ws);
+  wss.on("connection", (ws: WebSocket, request: IncomingMessage) => {
+    try {
+      const url = parseUrl(request.url || "", true);
+      const token = url.query.token as string;
+
+      if (!token) {
+        ws.close(4001, "Unauthorized: Missing token");
+        console.log("WebSocket connection rejected: No token provided");
+        return;
+      }
+
+      const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
+        userId: string;
+        email: string;
+        name: string;
+      };
+
+      (ws as any).user = payload;
+      console.log(`WebSocket authenticated: ${payload.email}`);
+    } catch (error) {
+      ws.close(4001, "Unauthorized: Invalid or expired token");
+      console.log("WebSocket connection rejected: Token verification failed");
+      return;
+    }
 
     ws.send(
       JSON.stringify({
@@ -20,6 +44,8 @@ export function initWebSocket(server: HttpServer): WebSocketServer {
         message: "Connected to Kanban WebSocket server",
       }),
     );
+
+    addClient(ws);
 
     ws.on("message", (data) => {
       console.log("WebSocket message received:", data.toString());
