@@ -14,9 +14,15 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/ws": "^8.18.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "pg": "^8.19.0"
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.19.0",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.4.2",
