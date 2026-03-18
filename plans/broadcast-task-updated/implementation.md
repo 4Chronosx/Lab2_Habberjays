@@ -1,10 +1,39 @@
 # Broadcast task:updated Event to All Clients
 
+**Status:** ✅ **COMPLETE & TESTED**
+
 ## Goal
 
 Enable real-time task update notifications by broadcasting a `task:updated` WebSocket event to all connected clients immediately after a task is successfully updated via the REST API.
 
-### Step-by-Step Instructions
+## Test Execution
+
+**Automated Test Script:** `test-broadcast-task-updated.js`
+
+**Run tests:**
+
+```bash
+node test-broadcast-task-updated.js
+```
+
+**All tests passed:** ✅
+
+- [x] Server health check
+- [x] JWT token generation with real user ID
+- [x] Unauthenticated request returns 401
+- [x] Task creation with authentication
+- [x] WebSocket connection and welcome message
+- [x] Task update triggers `task:updated` broadcast
+- [x] Non-existent task returns 404
+- [x] Unauthorized request returns 401
+- [x] Update succeeds with no WebSocket clients connected
+
+**Test Coverage:**
+
+- ✅ REST endpoint returns 200 with updated task
+- ✅ WebSocket clients receive broadcast with correct message format
+- ✅ Error handling (401, 404, 500)
+- ✅ Edge cases (no clients, partial updates)
 
 #### Step 1: Update MessageType Constant and Add Task Update Service Method
 
