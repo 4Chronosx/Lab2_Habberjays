@@ -10,7 +10,7 @@ export const authenticated = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const accessToken = req.cookies?.access_token;
+  const accessToken = req.cookies.access_token;
 
   if (!accessToken) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -23,4 +23,18 @@ export const authenticated = async (
   } catch (error) {
     return res.status(401).json({ message: "Access token expired" });
   }
+};
+
+export const validateCsrf = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const cookieToken = req.cookies.csrf_token;
+  const headerToken = req.headers["x-csrf-token"];
+
+  if (!cookieToken || cookieToken !== headerToken) {
+    return res.status(403).json({ error: "Invalid CSRF token" });
+  }
+  next();
 };
