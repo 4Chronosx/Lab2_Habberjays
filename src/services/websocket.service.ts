@@ -14,7 +14,7 @@ export interface AuthenticatedWebSocket extends WebSocket {
 
 export const MessageType = {
   TASK_CREATED: "task:created",
-  TASK_UPDATED: "TASK_UPDATED",
+  TASK_UPDATED: "task:updated",
   TASK_MOVED: "TASK_MOVED",
   TASK_DELETED: "TASK_DELETED",
 } as const;

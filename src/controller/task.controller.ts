@@ -26,3 +26,36 @@ export const addTask = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const updateTask = async (req: AuthRequest, res: Response) => {
+  const rawId = req.params.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
+  const updates = req.body;
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  if (!id) {
+    return res.status(400).json({ error: "Task ID is required" });
+  }
+
+  try {
+    const result = await TaskService.update(id, updates);
+
+    // ─── Broadcast to all connected WebSocket clients ────────────
+    broadcast({
+      type: MessageType.TASK_UPDATED,
+      payload: result,
+      timestamp: new Date().toISOString(),
+    });
+
+    res.status(200).json(result);
+  } catch (err: any) {
+    if (err.message === "Task not found") {
+      return res.status(404).json({ error: err.message });
+    }
+    res.status(500).json({ error: err.message });
+  }
+};
