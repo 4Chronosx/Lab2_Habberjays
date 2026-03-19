@@ -32,7 +32,8 @@ export const TaskService = {
             SET
               title = COALESCE($1, title),
               details = COALESCE($2, details),
-              current_status = COALESCE($3, current_status)
+              current_status = COALESCE($3, current_status),
+              updated_at = NOW()
             WHERE id = $4 AND deleted_at IS NULL
             RETURNING *;
             `,
