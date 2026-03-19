@@ -45,4 +45,22 @@ export const TaskService = {
 
     return rows[0];
   },
+
+  softDelete: async (id: string, userId: string) => {
+    const { rows } = await pool.query(
+      `
+            UPDATE tasks
+            SET deleted_at = now()
+            WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+            RETURNING *;
+            `,
+      [id, userId],
+    );
+
+    if (rows.length === 0) {
+      throw new Error("Task not found");
+    }
+
+    return rows[0];
+  },
 };

@@ -59,3 +59,29 @@ export const updateTask = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const deleteTask = async (req: AuthRequest, res: Response) => {
+  const { id } = req.body;
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const result = await TaskService.softDelete(id, userId);
+
+    broadcast({
+      type: MessageType.TASK_DELETED,
+      payload: result,
+      timestamp: new Date().toISOString(),
+    });
+
+    res.status(200).json(result);
+  } catch (err: any) {
+    if (err.message === "Task not found") {
+      return res.status(404).json({ error: err.message });
+    }
+    res.status(500).json({ error: err.message });
+  }
+};
