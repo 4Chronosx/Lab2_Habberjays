@@ -17,9 +17,31 @@ interface AuthorizationCodeTokenRequest {
 const FRONTEND_URL = process.env.FRONTEND_URL!;
 const isProduction = process.env.NODE_ENV === "production";
 
+const FRONTEND_ORIGIN_COOKIE = "oauth_frontend_origin";
+
+const normalizeFrontendOrigin = (origin?: string | null) => {
+    if (!origin) return null;
+
+    try {
+        const parsed = new URL(origin);
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+            return null;
+        }
+
+        return parsed.origin;
+    } catch {
+        return null;
+    }
+};
+
+const getFrontendTarget = (req: Request) => {
+    return normalizeFrontendOrigin(req.cookies?.[FRONTEND_ORIGIN_COOKIE]) || FRONTEND_URL;
+};
+
 export const url = async(req: Request, res: Response) => {
     try {
         const state = crypto.randomUUID();
+        const frontendOrigin = normalizeFrontendOrigin(req.headers.origin);
 
         res.cookie("oauth_state", state, {
             httpOnly: true,
@@ -27,6 +49,15 @@ export const url = async(req: Request, res: Response) => {
             sameSite: isProduction ? "none" : "lax",
             maxAge: 5 * 60 * 1000
         });
+
+        if (frontendOrigin) {
+            res.cookie(FRONTEND_ORIGIN_COOKIE, frontendOrigin, {
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: isProduction ? "none" : "lax",
+                maxAge: 5 * 60 * 1000,
+            });
+        }
 
         const params = new URLSearchParams({
             client_id: process.env.GOOGLE_CLIENT_ID!,
@@ -50,20 +81,22 @@ export const url = async(req: Request, res: Response) => {
 export const callback = async(req: Request, res: Response) => {
     const { code, state, error } = req.query;
     const storedState = req.cookies.oauth_state;
+    const frontendTarget = getFrontendTarget(req);
 
     if (error) {
-        return res.redirect(`${FRONTEND_URL}/index.html?error=authentication_failed`);
+        return res.redirect(`${frontendTarget}/index.html?error=authentication_failed`);
     }
 
     if (!code || !state) {
-        return res.redirect(`${FRONTEND_URL}/index.html?error=missing_code_or_state`);
+        return res.redirect(`${frontendTarget}/index.html?error=missing_code_or_state`);
     }
 
     if (!storedState || state !== storedState) {
-        return res.redirect(`${FRONTEND_URL}/index.html?error=state_mismatch`);
+        return res.redirect(`${frontendTarget}/index.html?error=state_mismatch`);
     }
 
     res.clearCookie("oauth_state");
+    res.clearCookie(FRONTEND_ORIGIN_COOKIE);
 
     const tokenRequest: AuthorizationCodeTokenRequest = {
         code: code as string,
@@ -83,7 +116,7 @@ export const callback = async(req: Request, res: Response) => {
         const payload = ticket.getPayload()!;
 
         if (!payload.email_verified) {
-            return res.redirect(`${FRONTEND_URL}/index.html?error=email_not_verified`);
+            return res.redirect(`${frontendTarget}/index.html?error=email_not_verified`);
         }
 
         const user = await UserService.upsert({
@@ -121,10 +154,10 @@ export const callback = async(req: Request, res: Response) => {
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
-        res.redirect(`${FRONTEND_URL}/home.html`); 
+        res.redirect(`${frontendTarget}/home.html`); 
     } catch (error) {
         console.error("Token exchange failed:", error);
-        res.redirect(`${FRONTEND_URL}/index.html?error=token_exchange_failed`);
+        res.redirect(`${frontendTarget}/index.html?error=token_exchange_failed`);
     }
 }
 
