@@ -26,6 +26,7 @@ async function fetchWithAuth(url, options = {}) {
 
     return res;
 }
+
 // ─── CSRF ─────────────────────────────────────────────────────────────────────
 
 let csrfToken = null;

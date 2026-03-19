@@ -5,7 +5,7 @@ Cookie: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMDk3OT
 ### Create Task (broadcasts to WebSocket clients)
 POST http://localhost:8000/task/add
 Content-Type: application/json
-Cookie: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMDk3OTU0MTkzMjY0Nzc4MDk3NjMiLCJlbWFpbCI6Imtib3JiYW5vQHVwLmVkdS5waCIsIm5hbWUiOiJLaW50IExvdWlzZSBCb3JiYW5vIiwiaWF0IjoxNzczNjcyNzg4LCJleHAiOjE3NzM2NzM2ODh9.54u6B4oNBZnbl0D8P9Gks5YMOlE7U-iziqzqZ1t_t1g
+Cookie: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMTE4OTE3OTM0NjExMTI4MzY3MDEiLCJlbWFpbCI6ImxzZ3V5QHVwLmVkdS5waCIsIm5hbWUiOiJMYW5jZSBEYW5pZWwgR3V5IiwiaWF0IjoxNzczOTQxODU2LCJleHAiOjE3NzM5NDI3NTZ9.jEW521KxLSBfVeBNp-NAhQddvjXeWv__IswHhV8-H2Y
 
 {
   "title": "Test Task",
