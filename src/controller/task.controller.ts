@@ -59,3 +59,26 @@ export const updateTask = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getAllTask = async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const result = await TaskService.getAll(userId);
+
+    // ─── Broadcast to all connected WebSocket clients ────────────
+    broadcast({
+      type: MessageType.TASK_GET_ALL,
+      payload: { tasks: result },
+      timestamp: new Date().toISOString(),
+    });
+
+    res.status(200).json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

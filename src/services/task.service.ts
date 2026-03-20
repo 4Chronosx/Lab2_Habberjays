@@ -46,4 +46,18 @@ export const TaskService = {
 
     return rows[0];
   },
+
+  getAll: async (userId: string) => {
+    const { rows } = await pool.query(
+      `
+            SELECT *
+            FROM tasks
+            WHERE user_id = $1 AND deleted_at IS NULL
+            ORDER BY created_at DESC;
+            `,
+      [userId],
+    );
+
+    return rows;
+  },
 };
