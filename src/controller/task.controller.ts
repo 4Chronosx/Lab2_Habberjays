@@ -60,7 +60,7 @@ export const updateTask = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getAllTask = async (req: AuthRequest, res: Response) => {
+export const getAllTasks = async (req: AuthRequest, res: Response) => {
   const userId = req.user?.userId;
 
   if (!userId) {
