@@ -32,7 +32,8 @@ export const TaskService = {
             SET
               title = COALESCE($1, title),
               details = COALESCE($2, details),
-              current_status = COALESCE($3, current_status)
+              current_status = COALESCE($3, current_status),
+              updated_at = NOW()
             WHERE id = $4 AND deleted_at IS NULL
             RETURNING *;
             `,
@@ -44,5 +45,19 @@ export const TaskService = {
     }
 
     return rows[0];
+  },
+
+  getAll: async (userId: string) => {
+    const { rows } = await pool.query(
+      `
+            SELECT *
+            FROM tasks
+            WHERE user_id = $1 AND deleted_at IS NULL
+            ORDER BY created_at DESC;
+            `,
+      [userId],
+    );
+
+    return rows;
   },
 };
