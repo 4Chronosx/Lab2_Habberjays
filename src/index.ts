@@ -5,6 +5,7 @@ import taskRoutes from "./routes/task.routes";
 import authRoutes from "./routes/auth.routes";
 import cookieParser from "cookie-parser";
 import { initWebSocket } from "./websocket";
+import { initCronJobs } from "./cron";
 import path from "path";
 
 const app = express();
@@ -41,6 +42,7 @@ app.get("/", (req: Request, res: Response) => {
 
 const server = http.createServer(app);
 initWebSocket(server);
+initCronJobs();
 
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
