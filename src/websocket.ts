@@ -64,7 +64,7 @@ export function initWebSocket(server: HttpServer): WebSocketServer {
           JSON.stringify({
             error: "Invalid message schema",
             expected: {
-              type: "TASK_CREATED | TASK_UPDATED | TASK_MOVED | TASK_DELETED",
+              type: "TASK_CREATED | TASK_UPDATED | TASK_GET_ALL | TASK_DELETED",
               payload: {},
               timestamp: "ISO 8601 string",
             },

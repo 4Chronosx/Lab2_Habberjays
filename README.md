@@ -50,7 +50,7 @@ npm run dev
 
 ### Frontend
 
-1. Open the `frontend` folder in VS Code
+1. Open the project folder in VS Code
 2. Right click `index.html` → **Open with Live Server**
 3. Frontend will be available at `http://localhost:5500/index.html`
 
@@ -73,10 +73,20 @@ Install the [REST Client extension](https://marketplace.visualstudio.com/items?i
 
 > ⚠️ Do **NOT** use the Google `id_token`. Only the `access_token` issued by this server works.
 
-### Example Request
+### Task API (Shared Board)
+
+All authenticated users access a team-wide shared board.
+
+- `GET /task` returns all non-deleted tasks.
+- `POST /task` is the single manage endpoint:
+  - create: send `title`, `details`, `current_status`
+  - update: send `id` plus one or more updatable fields
+  - soft-delete: send `id` and `isDelete: true`
+
+### Example Requests
 
 ```http
-POST http://localhost:8000/task/add
+POST http://localhost:8000/task
 Content-Type: application/json
 Cookie: access_token=<paste_access_token_here>
 
@@ -84,6 +94,28 @@ Cookie: access_token=<paste_access_token_here>
     "title": "Task 1",
     "details": "This is the description",
     "current_status": "doing"
+}
+```
+
+```http
+POST http://localhost:8000/task
+Content-Type: application/json
+Cookie: access_token=<paste_access_token_here>
+
+{
+        "id": "<task_uuid>",
+        "current_status": "done"
+}
+```
+
+```http
+POST http://localhost:8000/task
+Content-Type: application/json
+Cookie: access_token=<paste_access_token_here>
+
+{
+        "id": "<task_uuid>",
+        "isDelete": true
 }
 ```
 

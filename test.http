@@ -20,7 +20,7 @@
 ###
 ### ======================================================
 
-POST http://localhost:8000/task/add
+POST http://localhost:8000/task
 Content-Type: application/json
 Cookie: access_token=<paste_access_token_here>
 
@@ -29,3 +29,27 @@ Cookie: access_token=<paste_access_token_here>
     "details": "This is the description",
     "current_status": "doing"
 }
+
+### Update task (single manage endpoint)
+POST http://localhost:8000/task
+Content-Type: application/json
+Cookie: access_token=<paste_access_token_here>
+
+{
+    "id": "<task_uuid>",
+    "current_status": "done"
+}
+
+### Soft delete task (single manage endpoint)
+POST http://localhost:8000/task
+Content-Type: application/json
+Cookie: access_token=<paste_access_token_here>
+
+{
+    "id": "<task_uuid>",
+    "isDelete": true
+}
+
+### Get all tasks (shared board)
+GET http://localhost:8000/task
+Cookie: access_token=<paste_access_token_here>
