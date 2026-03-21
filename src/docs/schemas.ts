@@ -77,7 +77,7 @@ export const taskSchemas = {
   CreateTaskRequest: {
     type: "object",
     description:
-      "Create task payload: needs title and current_status, with optional details.",
+      "Create task payload: needs title and current_status, with optional description.",
     properties: {
       title: {
         type: "string",
@@ -96,7 +96,7 @@ export const taskSchemas = {
   },
   UpdateTaskRequest: {
     description:
-      "Update task payload: requires id if of the task and exactly one of title, current_status, or details.",
+      "Update task payload: requires id if of the task and exactly one of title, current_status, or description.",
     oneOf: [
       {
         type: "object",

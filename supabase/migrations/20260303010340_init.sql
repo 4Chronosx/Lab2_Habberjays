@@ -13,7 +13,7 @@ CREATE TABLE tasks (
     id UUID PRIMARY KEY DEFAULT GEN_RANDOM_UUID(),
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
-    details TEXT,
+    description TEXT,
     current_status TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     deleted_at TIMESTAMPTZ

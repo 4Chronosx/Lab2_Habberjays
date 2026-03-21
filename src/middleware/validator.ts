@@ -14,31 +14,6 @@ export const validateTaskPayload = (
       ...incomingPayload,
     };
 
-    if (
-      incomingPayload.taskId !== undefined &&
-      incomingPayload.id === undefined
-    ) {
-      normalizedPayload.id = incomingPayload.taskId;
-    }
-
-    if (
-      incomingPayload.status !== undefined &&
-      incomingPayload.current_status === undefined
-    ) {
-      normalizedPayload.current_status = incomingPayload.status;
-    }
-
-    if (
-      incomingPayload.description !== undefined &&
-      incomingPayload.details === undefined
-    ) {
-      normalizedPayload.details = incomingPayload.description;
-    }
-
-    delete normalizedPayload.taskId;
-    delete normalizedPayload.status;
-    delete normalizedPayload.description;
-
     const parsedPayload = TaskSchema.parse(normalizedPayload);
     req.body = parsedPayload;
     next();
@@ -46,7 +21,7 @@ export const validateTaskPayload = (
     if (error instanceof ZodError) {
       return res.status(400).json({
         error: "Invalid task payload",
-        details: error.issues.map((issue) => ({
+        description: error.issues.map((issue) => ({
           path: issue.path.join("."),
           message: issue.message,
         })),

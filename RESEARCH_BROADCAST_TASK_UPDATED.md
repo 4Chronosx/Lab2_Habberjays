@@ -80,7 +80,7 @@ import { pool } from "../lib/supabase";
 
 interface TaskProps {
   title: string;
-  details: string;
+  description: string;
   current_status: string;
 }
 
@@ -88,11 +88,11 @@ export const TaskService = {
   add: async (task: TaskProps, userId: string) => {
     const { rows } = await pool.query(
       `
-            INSERT INTO tasks (user_id, title, details, current_status)
+            INSERT INTO tasks (user_id, title, description, current_status)
             VALUES($1, $2, $3, $4)
             RETURNING *;
             `,
-      [userId, task.title, task.details, task.current_status],
+      [userId, task.title, task.description, task.current_status],
     );
     return rows[0];
   },
@@ -110,7 +110,7 @@ CREATE TABLE tasks (
     id UUID PRIMARY KEY DEFAULT GEN_RANDOM_UUID(),
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
-    details TEXT,
+    description TEXT,
     current_status TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     deleted_at TIMESTAMPTZ
@@ -120,7 +120,7 @@ CREATE TABLE tasks (
 **Fields that can be updated:**
 
 - `title` (NOT NULL)
-- `details` (nullable)
+- `description` (nullable)
 - `current_status` (NOT NULL) - This is what changes when moving between columns
 
 ---
@@ -361,7 +361,7 @@ broadcast({
 - `id` - UUID (auto-generated)
 - `user_id` - TEXT (foreign key to users)
 - `title` - TEXT (NOT NULL)
-- `details` - TEXT (nullable)
+- `description` - TEXT (nullable)
 - `current_status` - TEXT (NOT NULL) - **This is what changes when moving columns**
 - `created_at` - TIMESTAMPTZ (auto)
 - `deleted_at` - TIMESTAMPTZ (nullable - soft delete)
@@ -373,7 +373,7 @@ broadcast({
   id: "uuid",
   user_id: "string",
   title: "string",
-  details: "string | null",
+  description: "string | null",
   current_status: "todo | in-progress | done", // or any status value
   created_at: "2026-03-18T...",
   deleted_at: null
@@ -441,7 +441,7 @@ try {
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "user_id": "user123",
     "title": "Implement login page",
-    "details": "Create React component with form validation",
+    "description": "Create React component with form validation",
     "current_status": "todo",
     "created_at": "2026-03-18T20:00:00.000Z",
     "deleted_at": null
@@ -459,7 +459,7 @@ try {
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "user_id": "user123",
     "title": "Implement login page",
-    "details": "Create React component with form validation",
+    "description": "Create React component with form validation",
     "current_status": "in-progress",
     "created_at": "2026-03-18T20:00:00.000Z",
     "deleted_at": null
@@ -574,7 +574,7 @@ export function broadcast(message: WebSocketMessage): void {
 ```typescript
 interface UpdateTaskProps {
   title?: string;
-  details?: string;
+  description?: string;
   current_status?: string;
 }
 
@@ -584,12 +584,12 @@ update: async (id: string, updates: UpdateTaskProps, userId: string) => {
         UPDATE tasks
         SET 
           title = COALESCE($1, title),
-          details = COALESCE($2, details),
+          description = COALESCE($2, description),
           current_status = COALESCE($3, current_status)
         WHERE id = $4 AND user_id = $5 AND deleted_at IS NULL
         RETURNING *;
         `,
-    [updates.title, updates.details, updates.current_status, id, userId],
+    [updates.title, updates.description, updates.current_status, id, userId],
   );
 
   if (rows.length === 0) {
@@ -743,7 +743,7 @@ Content-Type: application/json
 
 {
   "title": "Test Task",
-  "details": "Testing update broadcast",
+  "description": "Testing update broadcast",
   "current_status": "todo"
 }
 ```
@@ -848,3 +848,4 @@ PATCH http://localhost:8000/task/99999999-9999-9999-9999-999999999999
 ---
 
 **End of Research Document**
+
