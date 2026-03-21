@@ -13,7 +13,7 @@ interface UpdateTaskProps {
 }
 
 export const TaskService = {
-  add: async (task: TaskProps, userId: string) => {
+  add: async (userId: string, task: TaskProps) => {
     const { rows } = await pool.query(
       `
             INSERT INTO tasks (user_id, title, details, current_status)
@@ -25,7 +25,7 @@ export const TaskService = {
     return rows[0];
   },
 
-  update: async (id: string, updates: UpdateTaskProps) => {
+  update: async (TaskId: string, updates: UpdateTaskProps) => {
     const { rows } = await pool.query(
       `
             UPDATE tasks
@@ -37,7 +37,7 @@ export const TaskService = {
             WHERE id = $4 AND deleted_at IS NULL
             RETURNING *;
             `,
-      [updates.title, updates.details, updates.current_status, id],
+      [updates.title, updates.details, updates.current_status, TaskId],
     );
 
     if (rows.length === 0) {
@@ -47,15 +47,34 @@ export const TaskService = {
     return rows[0];
   },
 
-  getAll: async (userId: string) => {
+  delete: async (taskId: string) => {
+    const { rows } = await pool.query(
+      `
+            UPDATE tasks
+            SET deleted_at = NOW()
+            WHERE id = $1 AND deleted_at IS NULL
+            RETURNING *;
+            `,
+      [taskId],
+    );
+
+    if (rows.length === 0) {
+      throw new Error("Task not found");
+    }
+
+    return rows[0];
+  },
+
+
+  getAll: async () => {
     const { rows } = await pool.query(
       `
             SELECT *
             FROM tasks
-            WHERE user_id = $1 AND deleted_at IS NULL
+            WHERE deleted_at IS NULL
             ORDER BY created_at DESC;
             `,
-      [userId],
+      [],
     );
 
     return rows;

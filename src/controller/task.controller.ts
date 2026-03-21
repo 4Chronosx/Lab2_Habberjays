@@ -3,7 +3,9 @@ import { Response } from "express";
 import { AuthRequest } from "../middleware/middleware";
 import { broadcast, MessageType } from "../services/websocket.service";
 
-export const addTask = async (req: AuthRequest, res: Response) => {
+export const ManageTasks = async (req: AuthRequest, res: Response) => {
+  const taskId = req.body.id;
+  const isDelete = req.body.isDelete;
   const task = req.body;
   const userId = req.user?.userId;
 
@@ -12,50 +14,31 @@ export const addTask = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const result = await TaskService.add(task, userId);
+    let result;
+    let messageType;
 
+    if (taskId && !isDelete) {
+      // ─── Update existing task ─────────────────────────────────────
+      result = await TaskService.update(taskId, task);
+      messageType = MessageType.TASK_UPDATED;
+    } else if (taskId && isDelete) {
+      // ─── Delete existing task ─────────────────────────────────────
+      result = await TaskService.delete(taskId);
+      messageType = MessageType.TASK_DELETED;
+    } else {
+      result = await TaskService.add(userId, task);
+      messageType = MessageType.TASK_CREATED;
+    }
+    
     // ─── Broadcast to all connected WebSocket clients ────────────
     broadcast({
-      type: MessageType.TASK_CREATED,
+      type: messageType,
       payload: result,
       timestamp: new Date().toISOString(),
     });
 
     res.json(result);
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-export const updateTask = async (req: AuthRequest, res: Response) => {
-  const rawId = req.params.id;
-  const id = Array.isArray(rawId) ? rawId[0] : rawId;
-  const updates = req.body;
-  const userId = req.user?.userId;
-
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  if (!id) {
-    return res.status(400).json({ error: "Task ID is required" });
-  }
-
-  try {
-    const result = await TaskService.update(id, updates);
-
-    // ─── Broadcast to all connected WebSocket clients ────────────
-    broadcast({
-      type: MessageType.TASK_UPDATED,
-      payload: result,
-      timestamp: new Date().toISOString(),
-    });
-
-    res.status(200).json(result);
-  } catch (err: any) {
-    if (err.message === "Task not found") {
-      return res.status(404).json({ error: err.message });
-    }
     res.status(500).json({ error: err.message });
   }
 };
@@ -68,7 +51,7 @@ export const getAllTasks = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const result = await TaskService.getAll(userId);
+    const result = await TaskService.getAll();
 
     // ─── Broadcast to all connected WebSocket clients ────────────
     broadcast({

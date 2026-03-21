@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { addTask, updateTask, getAllTasks } from "../controller/task.controller";
+import { ManageTasks, getAllTasks } from "../controller/task.controller";
 import { authenticated } from "../middleware/middleware";
+import { validateTaskPayload } from "../middleware/validator";
 
 const router = Router();
 
-router.post("/add", authenticated, addTask);
-router.patch("/:id", authenticated, updateTask);
-router.get("/getAll", authenticated, getAllTasks);
+router.get("/", authenticated, getAllTasks);
+router.post("/", authenticated, validateTaskPayload, ManageTasks);
+
 
 export default router;
