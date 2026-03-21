@@ -79,7 +79,7 @@ All authenticated users access a team-wide shared board.
 
 - `GET /task` returns all non-deleted tasks.
 - `POST /task` is the single manage endpoint:
-  - create: send `title`, `details`, `current_status`
+        - create: send `title`, `description`, `current_status`
   - update: send `id` plus one or more updatable fields
   - soft-delete: send `id` and `isDelete: true`
 
@@ -92,7 +92,7 @@ Cookie: access_token=<paste_access_token_here>
 
 {
     "title": "Task 1",
-    "details": "This is the description",
+        "description": "This is the description",
     "current_status": "doing"
 }
 ```

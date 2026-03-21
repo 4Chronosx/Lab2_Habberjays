@@ -57,13 +57,13 @@ import { pool } from "../lib/supabase";
 
 interface TaskProps {
   title: string;
-  details: string;
+  description: string;
   current_status: string;
 }
 
 interface UpdateTaskProps {
   title?: string;
-  details?: string;
+  description?: string;
   current_status?: string;
 }
 
@@ -71,11 +71,11 @@ export const TaskService = {
   add: async (task: TaskProps, userId: string) => {
     const { rows } = await pool.query(
       `
-            INSERT INTO tasks (user_id, title, details, current_status)
+            INSERT INTO tasks (user_id, title, description, current_status)
             VALUES($1, $2, $3, $4)
             RETURNING *;
             `,
-      [userId, task.title, task.details, task.current_status],
+      [userId, task.title, task.description, task.current_status],
     );
     return rows[0];
   },
@@ -86,12 +86,12 @@ export const TaskService = {
             UPDATE tasks
             SET
               title = COALESCE($1, title),
-              details = COALESCE($2, details),
+              description = COALESCE($2, description),
               current_status = COALESCE($3, current_status)
             WHERE id = $4 AND deleted_at IS NULL
             RETURNING *;
             `,
-      [updates.title, updates.details, updates.current_status, id],
+      [updates.title, updates.description, updates.current_status, id],
     );
 
     if (rows.length === 0) {
@@ -194,7 +194,7 @@ export default router;
   ```json
   {
     "title": "Test Task",
-    "details": "Testing update broadcast",
+    "description": "Testing update broadcast",
     "current_status": "todo"
   }
   ```
@@ -208,7 +208,7 @@ export default router;
 - [ ] Verify the REST endpoint returns the updated task object with `200` status, including the changed `title` and `current_status` fields
 - [ ] Verify both WebSocket clients receive a message with:
   - `type`: `"task:updated"`
-  - `payload`: the full updated task object containing `id`, `user_id`, `title`, `details`, `current_status`, `created_at`
+  - `payload`: the full updated task object containing `id`, `user_id`, `title`, `description`, `current_status`, `created_at`
   - `timestamp`: an ISO 8601 formatted date string (e.g., `"2026-03-18T..."`)
 - [ ] Test error cases:
   - `PATCH /task/00000000-0000-0000-0000-000000000000` with valid auth returns `404` with `{ "error": "Task not found" }`
@@ -220,3 +220,4 @@ export default router;
 #### Step 1 STOP & COMMIT
 
 **STOP & COMMIT:** Agent must stop here and wait for the user to test, stage, and commit the change.
+

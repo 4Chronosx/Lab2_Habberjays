@@ -66,7 +66,7 @@ async function main() {
   const unauthRes = await fetchJson(`${BASE_URL}/task/add`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title: "x", details: "x", current_status: "todo" }),
+    body: JSON.stringify({ title: "x", description: "x", current_status: "todo" }),
   });
   assert.strictEqual(
     unauthRes.status,
@@ -85,7 +85,7 @@ async function main() {
     },
     body: JSON.stringify({
       title: "Automated test task",
-      details: "Task created by automated test",
+      description: "Task created by automated test",
       current_status: "todo",
     }),
   });

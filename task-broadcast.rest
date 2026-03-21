@@ -9,7 +9,7 @@ Cookie: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMDk3OT
 
 {
   "title": "Test Task",
-  "details": "Testing broadcast",
+  "description": "Testing broadcast",
   "current_status": "todo"
 }
 
