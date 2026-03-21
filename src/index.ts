@@ -7,6 +7,8 @@ import cookieParser from "cookie-parser";
 import { initWebSocket } from "./websocket";
 import { initCronJobs } from "./cron";
 import path from "path";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./docs/swagger";
 
 const app = express();
 const PORT = 8000;
@@ -32,6 +34,16 @@ app.use(
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "public")));
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: {
+      withCredentials: true,
+    },
+  }),
+);
 
 app.use("/tasks", taskRoutes);
 app.use("/auth", authRoutes);
