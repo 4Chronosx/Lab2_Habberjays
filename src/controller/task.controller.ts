@@ -4,7 +4,7 @@ import { AuthRequest } from "../middleware/middleware";
 import { broadcast, MessageType } from "../services/websocket.service";
 
 export const ManageTasks = async (req: AuthRequest, res: Response) => {
-  const id = req.body.id;
+  const taskId = req.body.id;
   const isDelete = req.body.isDelete;
   const task = req.body;
   const userId = req.user?.userId;
@@ -17,13 +17,13 @@ export const ManageTasks = async (req: AuthRequest, res: Response) => {
     let result;
     let messageType;
 
-    if (id && !isDelete) {
+    if (taskId && !isDelete) {
       // ─── Update existing task ─────────────────────────────────────
-      result = await TaskService.update(id, task);
+      result = await TaskService.update(taskId, task);
       messageType = MessageType.TASK_UPDATED;
-    } else if (id && isDelete) {
+    } else if (taskId && isDelete) {
       // ─── Delete existing task ─────────────────────────────────────
-      result = await TaskService.delete(id);
+      result = await TaskService.delete(taskId);
       messageType = MessageType.TASK_DELETED;
     } else {
       result = await TaskService.add(userId, task);
