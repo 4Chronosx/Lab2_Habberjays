@@ -9,7 +9,37 @@ export const validateTaskPayload = (
   next: NextFunction,
 ) => {
   try {
-    const parsedPayload = TaskSchema.parse(req.body);
+    const incomingPayload = req.body ?? {};
+    const normalizedPayload: Record<string, unknown> = {
+      ...incomingPayload,
+    };
+
+    if (
+      incomingPayload.taskId !== undefined &&
+      incomingPayload.id === undefined
+    ) {
+      normalizedPayload.id = incomingPayload.taskId;
+    }
+
+    if (
+      incomingPayload.status !== undefined &&
+      incomingPayload.current_status === undefined
+    ) {
+      normalizedPayload.current_status = incomingPayload.status;
+    }
+
+    if (
+      incomingPayload.description !== undefined &&
+      incomingPayload.details === undefined
+    ) {
+      normalizedPayload.details = incomingPayload.description;
+    }
+
+    delete normalizedPayload.taskId;
+    delete normalizedPayload.status;
+    delete normalizedPayload.description;
+
+    const parsedPayload = TaskSchema.parse(normalizedPayload);
     req.body = parsedPayload;
     next();
   } catch (error) {
