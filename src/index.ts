@@ -32,7 +32,7 @@ app.use(
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-app.use("/task", taskRoutes);
+app.use("/tasks", taskRoutes);
 app.use("/auth", authRoutes);
 
 app.get("/", (req: Request, res: Response) => {
