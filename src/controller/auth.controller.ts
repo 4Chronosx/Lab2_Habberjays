@@ -111,7 +111,7 @@ export const callback = async(req: Request, res: Response) => {
             httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? "none" : "lax",
-            maxAge: 15 * 60 * 1000
+            maxAge: 60 * 60 * 1000
         });
 
         res.cookie("refresh_token", refreshToken, {
