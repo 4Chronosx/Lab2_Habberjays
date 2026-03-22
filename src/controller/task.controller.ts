@@ -30,11 +30,12 @@ export const ManageTasks = async (req: AuthRequest, res: Response) => {
       result = await TaskService.add(userId, task);
       messageType = MessageType.TASK_CREATED;
     }
-    
+
     // ─── Broadcast to all connected WebSocket clients ────────────
     broadcast({
       type: messageType,
-      payload: result,
+      payload:
+        messageType === MessageType.TASK_DELETED ? { id: taskId } : result,
       timestamp: new Date().toISOString(),
     });
 
