@@ -77,8 +77,8 @@ Install the [REST Client extension](https://marketplace.visualstudio.com/items?i
 
 All authenticated users access a team-wide shared board.
 
-- `GET /task` returns all non-deleted tasks.
-- `POST /task` is the single manage endpoint:
+- `GET /tasks` returns all non-deleted tasks.
+- `POST /tasks` is the single manage endpoint:
         - create: send `title`, `description`, `current_status`
   - update: send `id` plus one or more updatable fields
   - soft-delete: send `id` and `isDelete: true`
@@ -86,7 +86,7 @@ All authenticated users access a team-wide shared board.
 ### Example Requests
 
 ```http
-POST http://localhost:8000/task
+POST http://localhost:8000/tasks
 Content-Type: application/json
 Cookie: access_token=<paste_access_token_here>
 
@@ -98,7 +98,7 @@ Cookie: access_token=<paste_access_token_here>
 ```
 
 ```http
-POST http://localhost:8000/task
+POST http://localhost:8000/tasks
 Content-Type: application/json
 Cookie: access_token=<paste_access_token_here>
 
@@ -109,7 +109,7 @@ Cookie: access_token=<paste_access_token_here>
 ```
 
 ```http
-POST http://localhost:8000/task
+POST http://localhost:8000/tasks
 Content-Type: application/json
 Cookie: access_token=<paste_access_token_here>
 
