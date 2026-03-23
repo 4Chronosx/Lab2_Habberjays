@@ -63,7 +63,7 @@ async function main() {
   const cookieHeader = `access_token=${token}`;
 
   console.log("\n3) Confirm unauthenticated request returns 401...");
-  const unauthRes = await fetchJson(`${BASE_URL}/task/add`, {
+  const unauthRes = await fetchJson(`${BASE_URL}/tasks`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ title: "x", description: "x", current_status: "todo" }),
@@ -77,7 +77,7 @@ async function main() {
 
   console.log("\n4) Create a task (authenticated)...");
   console.log("   Sending task creation request with access_token cookie...");
-  const createRes = await fetchJson(`${BASE_URL}/task/add`, {
+  const createRes = await fetchJson(`${BASE_URL}/tasks`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -174,8 +174,8 @@ async function main() {
     });
   });
 
-  const updateRes = await fetchJson(`${BASE_URL}/task/${task.id}`, {
-    method: "PATCH",
+  const updateRes = await fetchJson(`${BASE_URL}/tasks/${task.id}`, {
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Cookie: cookieHeader,
@@ -192,12 +192,14 @@ async function main() {
   const broadcastMsg = await broadcastPromise;
   assert.strictEqual(broadcastMsg.type, "task:updated");
   assert.strictEqual(broadcastMsg.payload.id, task.id);
+  assert.strictEqual(broadcastMsg.actor.email, "test@example.com");
+  assert.ok(typeof broadcastMsg.timestamp === "string");
   console.log("✅ Broadcast received (task:updated)");
 
   console.log("\n7) Confirm 404 is returned for non-existent task id...");
   const missingId = "00000000-0000-0000-0000-000000000000";
-  const missingRes = await fetchJson(`${BASE_URL}/task/${missingId}`, {
-    method: "PATCH",
+  const missingRes = await fetchJson(`${BASE_URL}/tasks/${missingId}`, {
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Cookie: cookieHeader,
@@ -212,8 +214,8 @@ async function main() {
   console.log("✅ Non-existent task returns 404");
 
   console.log("\n8) Confirm 401 when access_token cookie is missing...");
-  const missingAuthRes = await fetchJson(`${BASE_URL}/task/${task.id}`, {
-    method: "PATCH",
+  const missingAuthRes = await fetchJson(`${BASE_URL}/tasks/${task.id}`, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ title: "should fail" }),
   });
@@ -230,8 +232,8 @@ async function main() {
   ws.close();
   await delay(200);
 
-  const updateNoWsRes = await fetchJson(`${BASE_URL}/task/${task.id}`, {
-    method: "PATCH",
+  const updateNoWsRes = await fetchJson(`${BASE_URL}/tasks/${task.id}`, {
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Cookie: cookieHeader,

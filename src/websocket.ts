@@ -7,8 +7,14 @@ import {
   AuthenticatedWebSocket,
   addClient,
   removeClient,
-  isValidMessage,
+  createWebSocketMessage,
+  MessageType,
+  getConnectedUsers,
+  getPresenceUser,
+  getActiveClientCount,
+  logConnectedUsers,
   broadcast,
+  broadcastExcept,
 } from "./services/websocket.service";
 
 export function initWebSocket(server: HttpServer): WebSocketServer {
@@ -32,58 +38,115 @@ export function initWebSocket(server: HttpServer): WebSocketServer {
       };
 
       (ws as AuthenticatedWebSocket).user = payload;
-      console.log(`WebSocket authenticated: ${payload.email}`);
+      const presenceUser = {
+        user_id: payload.userId,
+        user_name: payload.name || payload.email,
+        email: payload.email,
+        picture_url: (payload as any).picture_url || (payload as any).pictureUrl,
+      };
+
+      console.log(`WebSocket authenticated: ${payload.email} ${payload}`);
+
+      ws.send(
+        JSON.stringify(
+          createWebSocketMessage("welcome", {
+            message: "Connected to Kanban WebSocket server",
+          }),
+        ),
+      );
+
+      addClient(ws as AuthenticatedWebSocket, presenceUser);
+
+      const connectedUsers = getConnectedUsers();
+      const listMessage = createWebSocketMessage(MessageType.PRESENCE_LIST, {
+        clients: connectedUsers,
+      });
+      ws.send(JSON.stringify(listMessage));
+      console.log(
+        `presence:list sent count=${connectedUsers.length} to ${payload.email}`,
+      );
+
+      const joinedMessage = createWebSocketMessage(MessageType.PRESENCE_JOINED, {
+        client: presenceUser,
+      });
+      const joinedRecipients = broadcastExcept(joinedMessage, ws as AuthenticatedWebSocket);
+      console.log(`presence:joined recipients=${joinedRecipients}`);
+
+      const activeCount = getActiveClientCount();
+      console.log(`WS auth success: user=${payload.email} connected=${activeCount}`);
     } catch (error) {
       ws.close(4001, "Unauthorized: Invalid or expired token");
       console.log("WebSocket connection rejected: Token verification failed");
       return;
     }
 
-    ws.send(
-      JSON.stringify({
-        type: "welcome",
-        message: "Connected to Kanban WebSocket server",
-      }),
-    );
-
-    addClient(ws as AuthenticatedWebSocket);
-
     ws.on("message", (data) => {
-      console.log("WebSocket message received:", data.toString());
-
       let parsed: unknown;
       try {
         parsed = JSON.parse(data.toString());
       } catch {
-        ws.send(JSON.stringify({ error: "Invalid JSON" }));
-        return;
-      }
-
-      if (!isValidMessage(parsed)) {
         ws.send(
-          JSON.stringify({
-            error: "Invalid message schema",
-            expected: {
-              type: "TASK_CREATED | TASK_UPDATED | TASK_GET_ALL | TASK_DELETED",
-              payload: {},
-              timestamp: "ISO 8601 string",
-            },
-          }),
+          JSON.stringify(
+            createWebSocketMessage("error", { message: "Invalid JSON" }),
+          ),
         );
         return;
       }
 
-      broadcast(parsed);
+      const type =
+        typeof parsed === "object" &&
+        parsed !== null &&
+        typeof (parsed as { type?: unknown }).type === "string"
+          ? (parsed as { type: string }).type
+          : "unknown";
+
+      console.log(`Inbound WS message received: type=${type}`);
+
+      if (type === MessageType.DEBUG_PING) {
+        ws.send(
+          JSON.stringify(createWebSocketMessage(MessageType.DEBUG_PONG, {})),
+        );
+        return;
+      }
+
+      ws.send(
+        JSON.stringify(
+          createWebSocketMessage("error", {
+            message: "Unsupported debug message type",
+            expected: MessageType.DEBUG_PING,
+          }),
+        ),
+      );
     });
 
     ws.on("close", () => {
-      console.log("WebSocket client disconnected");
+      const leavingUser = getPresenceUser(ws as AuthenticatedWebSocket);
+      console.log("WebSocket client disconnected", leavingUser?.email || "unknown");
+
       removeClient(ws as AuthenticatedWebSocket);
+
+      if (leavingUser) {
+        const leftMessage = createWebSocketMessage(MessageType.PRESENCE_LEFT, {
+          client: leavingUser,
+        });
+        const leftRecipients = broadcast(leftMessage);
+        console.log(`presence:left recipients=${leftRecipients}`);
+      }
     });
 
     ws.on("error", (error) => {
-      console.error("WebSocket error:", error);
+      const leavingUser = getPresenceUser(ws as AuthenticatedWebSocket);
+      console.error("WebSocket error:", error, leavingUser?.email || "unknown");
+
       removeClient(ws as AuthenticatedWebSocket);
+
+      if (leavingUser) {
+        const leftMessage = createWebSocketMessage(MessageType.PRESENCE_LEFT, {
+          client: leavingUser,
+        });
+        const leftRecipients = broadcast(leftMessage);
+        console.log(`presence:left recipients=${leftRecipients}`);
+      }
     });
   });
 

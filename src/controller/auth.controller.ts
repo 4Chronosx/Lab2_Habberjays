@@ -96,7 +96,8 @@ export const callback = async(req: Request, res: Response) => {
         const accessToken = TokenService.generateAccessToken({
             userId: user.id,
             email: user.email,
-            name: user.fullname
+            name: user.fullname,
+            picture_url: user.picture_url ?? ""
         });
 
         const refreshToken = TokenService.generateRefreshToken();
@@ -173,7 +174,8 @@ export const refresh = async (req: Request, res: Response) => {
         const accessToken = TokenService.generateAccessToken({
             userId: user.id,
             email: user.email,
-            name: user.fullname
+            name: user.fullname,
+            picture_url: user.picture_url ?? ""
         });
 
         res.cookie("access_token", accessToken, {
