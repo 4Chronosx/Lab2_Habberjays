@@ -57,7 +57,15 @@ export interface PresenceUser {
 
 const clients = new Set<AuthenticatedWebSocket>();
 const clientPresence = new Map<AuthenticatedWebSocket, PresenceUser>();
-const broadcastFingerprintByTypeAndTaskId = new Map<string, string>();
+const FINGERPRINT_TTL_MS = 10 * 60 * 1000;
+const FINGERPRINT_MAX_ENTRIES = 1000;
+
+interface FingerprintCacheEntry {
+  fingerprint: string;
+  savedAt: number;
+}
+
+const broadcastFingerprintByTypeAndTaskId = new Map<string, FingerprintCacheEntry>();
 
 export function addClient(ws: AuthenticatedWebSocket, presenceUser: PresenceUser): void {
   clients.add(ws);
@@ -134,6 +142,30 @@ function shouldApplyIdempotency(type: string): boolean {
   );
 }
 
+function cleanupFingerprintCache(now = Date.now()): void {
+  for (const [key, entry] of broadcastFingerprintByTypeAndTaskId.entries()) {
+    if (now - entry.savedAt > FINGERPRINT_TTL_MS) {
+      broadcastFingerprintByTypeAndTaskId.delete(key);
+    }
+  }
+
+  if (broadcastFingerprintByTypeAndTaskId.size <= FINGERPRINT_MAX_ENTRIES) {
+    return;
+  }
+
+  const sortedEntries = Array.from(broadcastFingerprintByTypeAndTaskId.entries()).sort(
+    (a, b) => a[1].savedAt - b[1].savedAt,
+  );
+
+  const excessCount = sortedEntries.length - FINGERPRINT_MAX_ENTRIES;
+  for (let index = 0; index < excessCount; index += 1) {
+    const keyToDelete = sortedEntries[index]?.[0];
+    if (keyToDelete) {
+      broadcastFingerprintByTypeAndTaskId.delete(keyToDelete);
+    }
+  }
+}
+
 export function createWebSocketMessage(
   type: string,
   payload: Record<string, unknown>,
@@ -150,6 +182,7 @@ export function createWebSocketMessage(
 
 export function broadcast(message: WebSocketMessage): number {
   const normalized = normalizeMessage(message);
+  cleanupFingerprintCache();
 
   if (shouldApplyIdempotency(normalized.type)) {
     const taskId = extractTaskId(normalized.payload);
@@ -157,15 +190,16 @@ export function broadcast(message: WebSocketMessage): number {
     if (taskId) {
       const idempotencyKey = `${normalized.type}:${taskId}`;
       const fingerprint = JSON.stringify(normalized);
-      const previousFingerprint = broadcastFingerprintByTypeAndTaskId.get(
-        idempotencyKey,
-      );
+      const previousFingerprint = broadcastFingerprintByTypeAndTaskId.get(idempotencyKey);
 
-      if (previousFingerprint === fingerprint) {
+      if (previousFingerprint?.fingerprint === fingerprint) {
         return 0;
       }
 
-      broadcastFingerprintByTypeAndTaskId.set(idempotencyKey, fingerprint);
+      broadcastFingerprintByTypeAndTaskId.set(idempotencyKey, {
+        fingerprint,
+        savedAt: Date.now(),
+      });
     }
   }
 
