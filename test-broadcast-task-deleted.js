@@ -168,16 +168,12 @@ async function runTest() {
   });
 
   // Trigger deletion via REST API
-  const deleteRes = await fetchJson(`${API_BASE}/tasks`, {
-    method: "POST",
+  const deleteRes = await fetchJson(`${API_BASE}/tasks/${taskId}`, {
+    method: "DELETE",
     headers: {
       "Content-Type": "application/json",
       Cookie: cookieHeader,
     },
-    body: JSON.stringify({
-      id: taskId,
-      isDelete: true,
-    }),
   });
 
   assert.strictEqual(
@@ -223,6 +219,13 @@ async function runTest() {
     "Timestamp is missing or not a string",
   );
   console.log(`   ✅ Timestamp is present: ${broadcastMsg.timestamp}`);
+
+  assert.strictEqual(
+    broadcastMsg.actor?.email,
+    "test@example.com",
+    "Expected actor.email to be test@example.com",
+  );
+  console.log(`   ✅ Actor is present: ${broadcastMsg.actor.email}`);
 
   // Verify payload is minimal (only id, no other task fields)
   const payloadKeys = Object.keys(broadcastMsg.payload);

@@ -178,19 +178,23 @@
 
     <div class="panel">
       <h2>Send Message</h2>
-      <label for="type">Action Type</label>
+      <label for="type">Message Type</label>
       <select id="type">
-        <option value="TASK_CREATED">TASK_CREATED</option>
-        <option value="TASK_UPDATED">TASK_UPDATED</option>
-        <option value="TASK_MOVED">TASK_MOVED</option>
-        <option value="TASK_DELETED">TASK_DELETED</option>
+        <option value="debug:ping">debug:ping</option>
+        <option value="task:created">task:created</option>
+        <option value="task:updated">task:updated</option>
+        <option value="task:deleted">task:deleted</option>
+        <option value="debug:unknown">debug:unknown (expect error)</option>
       </select>
 
       <label for="payload">Payload (JSON)</label>
-      <textarea id="payload">{"title": "New Task", "id": 1}</textarea>
+      <textarea id="payload">{}</textarea>
 
       <div class="actions">
         <button id="send" class="btn-primary" disabled>Send</button>
+        <button id="send-ping" class="btn-secondary" disabled>
+          Send debug:ping
+        </button>
         <button id="open-second" class="btn-secondary">
           Open Second Client
         </button>
@@ -209,10 +213,33 @@
       const sendBtn = document.getElementById("send");
       const typeSelect = document.getElementById("type");
       const payloadInput = document.getElementById("payload");
+      const sendPingBtn = document.getElementById("send-ping");
       const openSecondBtn = document.getElementById("open-second");
       const clearLogBtn = document.getElementById("clear-log");
 
       let ws = null;
+      const sampleTaskId = "00000000-0000-0000-0000-000000000001";
+
+      const payloadTemplates = {
+        "debug:ping": {},
+        "task:created": {
+          id: sampleTaskId,
+          title: "Client-side sample task",
+          description: "Sample payload for test page",
+          current_status: "todo",
+        },
+        "task:updated": {
+          id: sampleTaskId,
+          title: "Updated title sample",
+          current_status: "in-progress",
+        },
+        "task:deleted": {
+          id: sampleTaskId,
+        },
+        "debug:unknown": {
+          note: "Server should reply with unsupported debug message error",
+        },
+      };
 
       function getTimestamp() {
         return new Date().toLocaleTimeString("en-US", { hour12: false });
@@ -264,6 +291,7 @@
         ws.addEventListener("open", function () {
           setStatus("Connected", "connected");
           sendBtn.disabled = false;
+          sendPingBtn.disabled = false;
           appendLog("Connected to server", "log-info");
           console.log("[WS] Connected to server");
         });
@@ -280,23 +308,59 @@
           console.log("[WS] Message received:", event.data);
         });
 
-        ws.addEventListener("close", function () {
+        ws.addEventListener("close", function (event) {
           setStatus("Disconnected", "disconnected");
           sendBtn.disabled = true;
-          appendLog("Connection closed", "log-error");
-          console.log("[WS] Connection closed");
+          sendPingBtn.disabled = true;
+          appendLog(
+            "Connection closed (code=" + event.code + ", reason=" + event.reason + ")",
+            "log-error",
+          );
+          console.log("[WS] Connection closed", event.code, event.reason);
         });
 
         ws.addEventListener("error", function () {
           setStatus("Error", "error");
           sendBtn.disabled = true;
+          sendPingBtn.disabled = true;
           appendLog("Connection error", "log-error");
           console.log("[WS] Connection error");
         });
       }
 
+      function sendMessage(type, payload) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+        const message = {
+          type: type,
+          payload: payload,
+          timestamp: new Date().toISOString(),
+        };
+
+        const serialized = JSON.stringify(message);
+        ws.send(serialized);
+        appendLog("Sent: " + JSON.stringify(message, null, 2), "log-info");
+      }
+
+      function setPayloadTemplate(type) {
+        const template = payloadTemplates[type] ?? {};
+        payloadInput.value = JSON.stringify(template, null, 2);
+      }
+
+      typeSelect.addEventListener("change", function () {
+        setPayloadTemplate(typeSelect.value);
+      });
+
       sendBtn.addEventListener("click", function () {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+        if (typeSelect.value.startsWith("task:")) {
+          appendLog(
+            "Info: task events are not client-to-server on this endpoint. Use REST /tasks for create/update/delete; WebSocket receives broadcasts.",
+            "log-error",
+          );
+          return;
+        }
 
         let payload;
         try {
@@ -306,15 +370,11 @@
           return;
         }
 
-        const message = {
-          type: typeSelect.value,
-          payload: payload,
-          timestamp: new Date().toISOString(),
-        };
+        sendMessage(typeSelect.value, payload);
+      });
 
-        const serialized = JSON.stringify(message);
-        ws.send(serialized);
-        appendLog("Sent: " + JSON.stringify(message, null, 2), "log-info");
+      sendPingBtn.addEventListener("click", function () {
+        sendMessage("debug:ping", {});
       });
 
       openSecondBtn.addEventListener("click", function () {
@@ -325,6 +385,7 @@
         logEl.innerHTML = "";
       });
 
+      setPayloadTemplate(typeSelect.value);
       connect();
     </script>
   </body>
