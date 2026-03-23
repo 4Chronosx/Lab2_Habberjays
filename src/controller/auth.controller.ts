@@ -140,10 +140,17 @@ export const logout = async (req: AuthRequest, res: Response) => {
         await RefreshTokenService.delete(refreshToken);
     }
 
-    res.clearCookie("access_token");
-    res.clearCookie("refresh_token");
+    const cookieOptions = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' as const : 'lax' as const,
+        path: '/',
+    };
+
+    res.clearCookie("access_token", cookieOptions);
+    res.clearCookie("refresh_token", cookieOptions);
     res.json({ message: "Logged out" });
-}
+};
 
 export const csrfToken = (req: Request, res: Response) => {
     const token = crypto.randomUUID();
