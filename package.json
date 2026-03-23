@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "node node_modules/typescript/bin/tsc",
     "start": "node dist/index.js",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "keywords": [],
   "author": "",
