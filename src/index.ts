@@ -9,6 +9,7 @@ import { initCronJobs } from "./cron";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger";
+import { authLimiter, globalLimiter } from "./middleware/rateLimit";
 
 const app = express();
 const PORT = 8000;
@@ -34,6 +35,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "public")));
+app.use(globalLimiter);
 
 app.use(
   "/api-docs",
@@ -46,7 +48,7 @@ app.use(
 );
 
 app.use("/tasks", taskRoutes);
-app.use("/auth", authRoutes);
+app.use("/auth", authLimiter, authRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Hello World" });
