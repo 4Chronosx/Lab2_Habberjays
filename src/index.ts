@@ -48,7 +48,7 @@ app.use(
 );
 
 app.use("/tasks", taskRoutes);
-app.use("/auth", authLimiter, authRoutes);
+app.use("/auth", authRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Hello World" });
