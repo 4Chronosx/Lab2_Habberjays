@@ -1,6 +1,7 @@
 import { getAllTasksOperation } from "./getAllTasks";
 import { postTaskOperation } from "./postTasks";
 import { taskSchemas } from "./schemas";
+import { env } from "../config/env";
 
 export const swaggerSpec = {
   openapi: "3.1.0",
@@ -12,7 +13,7 @@ export const swaggerSpec = {
   },
   servers: [
     {
-      url: process.env.LIVE_URL,
+      url: env.swaggerServerUrl,
       description: "Server",
     },
   ],

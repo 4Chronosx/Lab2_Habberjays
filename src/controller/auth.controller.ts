@@ -5,6 +5,7 @@ import { google } from '../lib/google';
 import { AuthRequest } from '../middleware/middleware';
 import { TokenService } from '../services/token.service';
 import { RefreshTokenService } from '../services/refresh_token.service';
+import { env } from '../config/env';
 
 interface AuthorizationCodeTokenRequest {
     code: string,
@@ -14,8 +15,8 @@ interface AuthorizationCodeTokenRequest {
     grant_type: 'authorization_code';
 }
 
-const FRONTEND_URL = process.env.FRONTEND_URL!;
-const isProduction = process.env.NODE_ENV === "production";
+const FRONTEND_URL = env.frontendUrl;
+const isProduction = env.isProduction;
 
 export const url = async(req: Request, res: Response) => {
     try {
@@ -29,8 +30,8 @@ export const url = async(req: Request, res: Response) => {
         });
 
         const params = new URLSearchParams({
-            client_id: process.env.GOOGLE_CLIENT_ID!,
-            redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+            client_id: env.googleClientId,
+            redirect_uri: env.googleRedirectUri,
             response_type: "code",
             state,
             scope: [
@@ -67,9 +68,9 @@ export const callback = async(req: Request, res: Response) => {
 
     const tokenRequest: AuthorizationCodeTokenRequest = {
         code: code as string,
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-        redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+        client_id: env.googleClientId,
+        client_secret: env.googleClientSecret,
+        redirect_uri: env.googleRedirectUri,
         grant_type: 'authorization_code'
     }
 
@@ -78,7 +79,7 @@ export const callback = async(req: Request, res: Response) => {
 
         const ticket = await google.verifyIdToken({
             idToken: response.id_token,
-            audience: process.env.GOOGLE_CLIENT_ID!,
+            audience: env.googleClientId,
         });
         const payload = ticket.getPayload()!;
 

@@ -1,19 +1,13 @@
-
-import dotenv from "dotenv";
-dotenv.config();
-
 import { Pool } from 'pg';
+import { env } from "../config/env";
+
+const sslConfig = env.pgSsl
+  ? { rejectUnauthorized: env.pgSslRejectUnauthorized }
+  : false;
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, 
-  ssl: false
+  connectionString: env.databaseUrl,
+  ssl: sslConfig,
 });
 
-/* sample use case
-
-const { rows } = await pool.query(
-  'SELECT * FROM users WHERE city = $1',
-  ['New York']
-);
-
-*/          
+         

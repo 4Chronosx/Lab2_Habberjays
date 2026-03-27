@@ -1,4 +1,4 @@
 import { OAuth2Client } from "google-auth-library";
+import { env } from "../config/env";
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
-export const google = new OAuth2Client(GOOGLE_CLIENT_ID);
+export const google = new OAuth2Client(env.googleClientId);
