@@ -12,8 +12,8 @@ export const swaggerSpec = {
   },
   servers: [
     {
-      url: "http://localhost:8000",
-      description: "Local development server",
+      url: process.env.LIVE_URL,
+      description: "Server",
     },
   ],
   tags: [

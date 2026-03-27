@@ -1,7 +1,7 @@
 import { pool } from "../lib/supabase";
 
 export async function purgeDeletedTasks(): Promise<{ purgedCount: number }> {
-  const retentionDays = parseInt(process.env.SOFT_DELETE_RETENTION_DAYS || "1", 10);
+  const retentionDays = parseInt(process.env.SOFT_DELETE_RETENTION_DAYS || "0", 10);
 
   try {
     const result = await pool.query(

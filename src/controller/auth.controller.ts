@@ -52,15 +52,15 @@ export const callback = async(req: Request, res: Response) => {
     const storedState = req.cookies.oauth_state;
 
     if (error) {
-        return res.redirect(`${FRONTEND_URL}/index.html?error=authentication_failed`);
+        return res.redirect(`${FRONTEND_URL}/#/login?error=authentication_failed`);
     }
 
     if (!code || !state) {
-        return res.redirect(`${FRONTEND_URL}/index.html?error=missing_code_or_state`);
+        return res.redirect(`${FRONTEND_URL}/#/login?error=missing_code_or_state`);
     }
 
     if (!storedState || state !== storedState) {
-        return res.redirect(`${FRONTEND_URL}/index.html?error=state_mismatch`);
+        return res.redirect(`${FRONTEND_URL}/#/login?error=state_mismatch`);
     }
 
     res.clearCookie("oauth_state");
@@ -83,7 +83,7 @@ export const callback = async(req: Request, res: Response) => {
         const payload = ticket.getPayload()!;
 
         if (!payload.email_verified) {
-            return res.redirect(`${FRONTEND_URL}/index.html?error=email_not_verified`);
+            return res.redirect(`${FRONTEND_URL}/#/login?error=email_not_verified`);
         }
 
         const user = await UserService.upsert({
@@ -125,7 +125,7 @@ export const callback = async(req: Request, res: Response) => {
         res.redirect(`${FRONTEND_URL}/#/board`); 
     } catch (error) {
         console.error("Token exchange failed:", error);
-        res.redirect(`${FRONTEND_URL}/index.html?error=token_exchange_failed`);
+        res.redirect(`${FRONTEND_URL}/#/login?error=token_exchange_failed`);
     }
 }
 
