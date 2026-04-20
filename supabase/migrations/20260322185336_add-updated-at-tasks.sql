@@ -1,0 +1,1 @@
+ALTER TABLE tasks ADD COLUMN updated_at TIMESTAMPTZ DEFAULT now();
